@@ -26,7 +26,7 @@ if __name__ == "__main__":
     demo_manual_registration()
 """
 
-pcd = o3d.io.read_point_cloud("examples/point_cloud.ply")
+pcd = o3d.io.read_point_cloud("examples/pcd/pcd_intrinsic.ply")
 
 vis = o3d.visualization.VisualizerWithEditing()
 # o3d.visualization.draw_geometries_with_editing([pcd])
