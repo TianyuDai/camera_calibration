@@ -14,7 +14,7 @@ points_2d = np.loadtxt("examples/points_2d.txt")
 points_2d_homo = np.concatenate((points_2d, np.array([[w]*len(points_2d)]).T), axis=1)
 
 
-depth_image = o3d.io.read_image("examples/session_17/00000.png")
+depth_image = o3d.io.read_image("examples/00002.png")
 depth_array = np.array(depth_image)
 print(np.shape(depth_array))
 
