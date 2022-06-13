@@ -24,7 +24,7 @@ def read_depth_info(args):
     if args.pcd == 'ray_pattern': 
         camera_info = np.load(args.dir+'/camera_info/IR_ray_pattern_Kinect1.npy')
     else: 
-        with open(args.dir+'/camera_info/intrinsic_depth.json') as f: 
+        with open(args.dir+'/camera_info/intrinsic.json') as f: 
             intrinsics = json.load(f)
             camera_info = np.array(intrinsics['intrinsic_matrix']).reshape((3, 3)).T
 
@@ -67,7 +67,7 @@ def pcd_from_intrinsic(args):
     pcd = o3d.geometry.PointCloud()
     # Flip y axis to map image plane to world frame
     pcd.points = o3d.utility.Vector3dVector(pcd_points)
-    pcd.transform([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
+    # pcd.transform([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
     
     if args.visualize: 
         # pcd.transform([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]])
@@ -154,8 +154,8 @@ if __name__ == '__main__':
     description = 'tools to build 3D point cloud based on depth image using ray pattern'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--dir', type=str, default='examples', help='path to data')
-    parser.add_argument('--pcd', type=str, default='intrinsic', help='approach to build pcd, choose from ray_pattern, intrinsic, open3d')
-    parser.add_argument('--image', type=int, default=28, help='index of the image to be processed')
+    parser.add_argument('--pcd', type=str, default='ray_pattern', help='approach to build pcd, choose from ray_pattern, intrinsic, open3d')
+    parser.add_argument('--image', type=int, default=13, help='index of the image to be processed')
     parser.add_argument('--visualize', type=bool, default=True, help='whether to visualize the point cloud after generating it')
     # parser.add_argument('--points', type=bool, default=True, help='whether to save 3D points information, only valid for ray_pattern and intrinsic approaches')
     
