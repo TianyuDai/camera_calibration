@@ -43,6 +43,7 @@ def pcd_from_intrinsic(args):
     depth_array = np.array(depth_image)
 
     height, width = np.shape(depth_array)
+    print(height, width)
     fx = camera_info[0][0] / height
     fy = camera_info[1][1] / height
     cx = camera_info[0][2] / height
@@ -55,18 +56,19 @@ def pcd_from_intrinsic(args):
             d = depth_array[i][j]
             if d == 0: 
                 continue
-            u, v = i / height - cx, j / height - cy
+            u, v = j / height, i / height
             z = d / height
-            x = u * z / fx
-            y = v * z / fy
+            x = (u - cx) * z / fx
+            y = (v - cy) * z / fy
             i_point_3d = np.array([x, y, z])
             pcd_points[i*width+j] = i_point_3d
-
+            # print(depth_array[i][j], pcd_points[i*width+j][2])
+    
     pcd = o3d.geometry.PointCloud()
     # Flip y axis to map image plane to world frame
     pcd.points = o3d.utility.Vector3dVector(pcd_points)
     pcd.transform([[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
-
+    
     if args.visualize: 
         # pcd.transform([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]])
         vis = o3d.visualization.Visualizer()
@@ -152,8 +154,8 @@ if __name__ == '__main__':
     description = 'tools to build 3D point cloud based on depth image using ray pattern'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--dir', type=str, default='examples', help='path to data')
-    parser.add_argument('--pcd', type=str, default='ray_pattern', help='approach to build pcd, choose from ray_pattern, intrinsic, open3d')
-    parser.add_argument('--image', type=int, default=0, help='index of the image to be processed')
+    parser.add_argument('--pcd', type=str, default='intrinsic', help='approach to build pcd, choose from ray_pattern, intrinsic, open3d')
+    parser.add_argument('--image', type=int, default=28, help='index of the image to be processed')
     parser.add_argument('--visualize', type=bool, default=True, help='whether to visualize the point cloud after generating it')
     # parser.add_argument('--points', type=bool, default=True, help='whether to save 3D points information, only valid for ray_pattern and intrinsic approaches')
     
@@ -163,12 +165,12 @@ if __name__ == '__main__':
     
     if args.pcd == 'ray_pattern': 
         pcd, points = pcd_from_ray_pattern(args)
-        np.savetxt(args.dir+'/pcd/points_from_'+args.pcd+'.txt', points)
+        np.savetxt(args.dir+'/pcd/points_from_'+args.pcd+'_img'+str(args.image)+'.txt', points)
     elif args.pcd == 'open3d': 
         pcd, points = pcd_from_o3d(args)
     elif args.pcd == 'intrinsic': 
         pcd, points = pcd_from_intrinsic(args)
-        np.savetxt(args.dir+'/pcd/points_from_'+args.pcd+'.txt', points)
+        np.savetxt(args.dir+'/pcd/points_from_'+args.pcd+'_img'+str(args.image)+'.txt', points)
     
-    o3d.io.write_point_cloud(args.dir+'/pcd/pcd_from_'+args.pcd+'.ply', pcd) 
+    o3d.io.write_point_cloud(args.dir+'/pcd/pcd_from_'+args.pcd+'_img'+str(args.image)+'.ply', pcd) 
     # o3d.io.write_point_cloud('pcd_from.ply', pcd) 
