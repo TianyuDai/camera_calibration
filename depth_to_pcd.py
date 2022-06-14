@@ -35,7 +35,7 @@ def show_depth(args):
     depth_image, camera_info = read_depth_info(args)
     plt.figure()
     plt.imshow(depth_image)
-    plt.imsave(args.dir+'/depth/{:05d}_imshow.png'.format(args.image), depth_image)
+    plt.imsave(args.dir+'/results/depth/{:05d}_imshow.png'.format(args.image), depth_image)
 
 def pcd_from_intrinsic(args): 
 
