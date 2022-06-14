@@ -165,12 +165,10 @@ if __name__ == '__main__':
     
     if args.pcd == 'ray_pattern': 
         pcd, points = pcd_from_ray_pattern(args)
-        np.savetxt(args.dir+'/pcd/points_from_'+args.pcd+'_img'+str(args.image)+'.txt', points)
     elif args.pcd == 'open3d': 
         pcd, points = pcd_from_o3d(args)
     elif args.pcd == 'intrinsic': 
         pcd, points = pcd_from_intrinsic(args)
-        np.savetxt(args.dir+'/pcd/points_from_'+args.pcd+'_img'+str(args.image)+'.txt', points)
-    
-    o3d.io.write_point_cloud(args.dir+'/pcd/pcd_from_'+args.pcd+'_img'+str(args.image)+'.ply', pcd) 
-    # o3d.io.write_point_cloud('pcd_from.ply', pcd) 
+
+    np.savetxt(args.dir+'/results/pcd/points_from_'+args.pcd+'_img'+str(args.image)+'.txt', points)
+    o3d.io.write_point_cloud(args.dir+'/results/pcd/pcd_from_'+args.pcd+'_img'+str(args.image)+'.ply', pcd) 

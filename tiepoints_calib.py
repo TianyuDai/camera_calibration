@@ -68,6 +68,4 @@ while flag:
 
 print(P*norm)
 
-np.savetxt('examples/camera_info/depth_to_rgb_proj_mat_img13.txt', norm*P)
-
-
+np.savetxt('examples/results/camera/depth_to_rgb_proj_mat_img13.txt', norm*P)

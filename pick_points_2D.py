@@ -7,9 +7,9 @@ fig, ax = plt.subplots()
 ax.imshow(img)
 
 points_2d = plt.ginput(n=15, timeout=-1)
-np.savetxt('examples/points_2d.txt', points_2d)
+np.savetxt('examples/results/picked_points/points_2d.txt', points_2d)
 
 for i, point in enumerate(points_2d): 
     ax.scatter(point[0], point[1], s=10, marker='+', color='red', linewidth=0.5)
     ax.text(point[0]+10, point[1]+2, i, color='red', fontsize=15)
-plt.savefig("examples/results/00013_labeled.jpg", dpi=200)
+plt.savefig("examples/results/picked_points/00013_labeled.jpg", dpi=200)

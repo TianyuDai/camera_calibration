@@ -1,0 +1,4 @@
+examples/results/camera/*
+examples/results/pcd/*
+examples/results/picked_points/*
+
