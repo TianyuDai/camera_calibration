@@ -24,7 +24,7 @@ def read_depth_info(args):
     if args.pcd == 'ray_pattern': 
         camera_info = np.load(args.dir+'/camera_info/IR_ray_pattern_Kinect1.npy')
     else: 
-        with open(args.dir+'/camera_info/intrinsic.json') as f: 
+        with open(args.dir+'/camera_info/intrinsic_depth_smaller.json') as f: 
             intrinsics = json.load(f)
             camera_info = np.array(intrinsics['intrinsic_matrix']).reshape((3, 3)).T
 
@@ -90,12 +90,13 @@ def pcd_from_ray_pattern(args):
     depth_array = np.array(depth_image)
 
     height, width = np.shape(depth_array)
+    print("height {} width {}".format(height, width))
     points_pcd = np.zeros((height*width, 3))
 
     for i in range(height): 
         for j in range(width): 
             r = ray_pattern[i, j]
-            Z = depth_array[i, j]
+            Z = depth_array[i, j] / height
             X = r[0] * Z / r[2]
             Y = r[1] * Z / r[2]
             points_pcd[i*width+j] = np.array([X, Y, Z])
@@ -103,7 +104,7 @@ def pcd_from_ray_pattern(args):
     pcd = o3d.geometry.PointCloud()
     # Flip y axis to map image plane to world frame
     pcd.points = o3d.utility.Vector3dVector(points_pcd)
-    pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+    # pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
     # o3d.visualization.draw_geometries([pcd])
 
     if args.visualize: 
@@ -120,7 +121,7 @@ def pcd_from_ray_pattern(args):
 
 def pcd_from_o3d(args): 
 
-    with open(args.dir+'/camera_info/intrinsic_depth.json') as f: 
+    with open(args.dir+'/camera_info/intrinsic_depth_smaller.json') as f: 
         camera_info = json.load(f)
         intrinsic_mat = np.array(camera_info['intrinsic_matrix']).reshape((3, 3)).T
 
@@ -133,7 +134,7 @@ def pcd_from_o3d(args):
 
     pcd = clean_pcd(pcd)
     points_pcd = pcd.points
-    pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+    # pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
     # pcd.transform([[0, 0, -1, 0], [0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1]])
     # o3d.io.write_point_cloud('pcd_from.ply', pcd) 
     
@@ -153,7 +154,7 @@ if __name__ == '__main__':
 
     description = 'tools to build 3D point cloud based on depth image using ray pattern'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--dir', type=str, default='examples', help='path to data')
+    parser.add_argument('--dir', type=str, default='../examples', help='path to data')
     parser.add_argument('--pcd', type=str, default='ray_pattern', help='approach to build pcd, choose from ray_pattern, intrinsic, open3d')
     parser.add_argument('--image', type=int, default=13, help='index of the image to be processed')
     parser.add_argument('--visualize', type=bool, default=True, help='whether to visualize the point cloud after generating it')

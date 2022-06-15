@@ -1,0 +1,19 @@
+{
+    "color_mode": "RES_720P",
+    "depth_mode": "NFOV_UNBINNED",
+    "height": 576,
+    "intrinsic_matrix": [
+        505.02545166015625,
+        0.0,
+        0.0,
+        0.0,
+        505.0204772949219,
+        0.0,
+        322.49731445,
+        336.50531006,
+        1.0
+    ],
+    "serial_number": "000661194512",
+    "stream_length_usec": 80466677,
+    "width": 640
+}

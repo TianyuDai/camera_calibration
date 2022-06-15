@@ -1,7 +1,7 @@
 import numpy as np
 import open3d as o3d
 
-pcd = o3d.io.read_point_cloud("examples/results/pcd/pcd_from_ray_pattern_img13.ply")
+pcd = o3d.io.read_point_cloud("../examples/results/pcd/pcd_from_ray_pattern_img150.ply")
 
 vis = o3d.visualization.VisualizerWithEditing()
 vis.create_window()
@@ -15,5 +15,5 @@ points = pcd.points
 points = np.array(points)
 picked_points_coord = points[picked_points] # get the corresponding coordinates from pcd
 
-np.savetxt("examples/results/picked_points/points_3d.txt", picked_points_coord)
+# np.savetxt("examples/results/picked_points/points_3d.txt", picked_points_coord)
 print(picked_points_coord)
