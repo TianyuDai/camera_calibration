@@ -1,7 +1,8 @@
 import numpy as np
 import open3d as o3d
 
-pcd = o3d.io.read_point_cloud("../examples/results/pcd/pcd_from_ray_pattern_img150.ply")
+pcd = o3d.io.read_point_cloud("../examples/results/pcd/pcd_from_ray_pattern_img13.ply")
+# pcd = o3d.io.read_point_cloud("../input/0405/session_2/c0.pcd")
 
 vis = o3d.visualization.VisualizerWithEditing()
 vis.create_window()

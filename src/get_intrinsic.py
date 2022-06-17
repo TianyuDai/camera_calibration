@@ -1,8 +1,8 @@
 import numpy as np
 import open3d as o3d
 
-# pcd = o3d.io.read_point_cloud('../input/session_0/c0.pcd')
-pcd = o3d.io.read_point_cloud('../examples/results/pcd/pcd_from_ray_pattern_img150.ply')
+# pcd = o3d.io.read_point_cloud('../input/0406/session_1/c0.pcd')
+pcd = o3d.io.read_point_cloud('../examples/results/pcd/pcd_from_ray_pattern_img13.ply')
 points_3d = pcd.points
 
 # points_3d = np.loadtxt('../examples/results/pcd/points_from_ray_pattern_img13.txt')
@@ -26,52 +26,30 @@ n_points = 30
 n_nulls = 0
 i_point = 0
 tiepoint_pairs_mat = np.zeros((2*n_points, 12))
-"""
-scaled_points_3d = np.zeros((width*height, 4))
+filtered_points = np.load("../examples/results/picked_points/pcd13_filtered_points.npy")
 
-for i, point in enumerate(points_3d): 
-    scale = point[2]
-    scaled_points_3d[i] = np.array([point[0]/scale, point[1]/scale, 1., 1./scale])
-
-mat = np.array([[0.88, -0.00, 0.56, 0.00], [-0.00, 0.88, 0.58, 0.00], [0.00, 0.00, 1.00, 0.00]])
-
-while (n_points > 0): 
-    x_idx = np.random.randint(0, width)
-    y_idx = np.random.randint(0, height)
-    i_point_3d = points_3d[y_idx*width+x_idx] 
-    # if np.all((i_point_3d == 0)):
-    if i_point_3d[2] == 0:
-        n_nulls += 1 
-        continue
-
-    n_points -= 1
-    u, v, w = x_idx / height, y_idx / height, 1.
-    point_2d = np.array([u, v, w])
-    i_point_3d = scaled_points_3d[y_idx*width+x_idx]
-    projected = np.matmul(mat, np.array([i_point_3d]).T)
-    # point_3d = i_point_3d
-    print("2d point", point_2d)
-    print("projected 2d point", projected.T[0])
-
-    
-    
-"""
 while(n_points > 0):
- 
+
     x_idx = np.random.randint(0, width)
     y_idx = np.random.randint(0, height)
-    i_point_3d = points_3d[y_idx*width+x_idx] 
 
-    if np.all((i_point_3d == 0)) or not np.all((i_point_3d < 3)):
-        n_nulls += 1 
+    if y_idx*width+x_idx in filtered_points:
         continue
+
+    i_point_3d = points_3d[y_idx*width+x_idx]
+    i_point_3d = np.array([p/height for p in i_point_3d])
+    # print(i_point_3d) 
+
+    # if np.all((i_point_3d == 0)) or not np.all((i_point_3d < 3.)):
+    #     n_nulls += 1 
+    #     continue
 
     n_points -= 1
     u, v, w = x_idx / height, y_idx / height, 1.
     # i_point_3d = np.array([p / height for p in points_3d[y_idx*width+x_idx]])
     scale = i_point_3d[2]
     i_point_3d = np.array([p / scale for p in i_point_3d])
-    i_point_3d = np.append(i_point_3d, scale)
+    i_point_3d = np.append(i_point_3d, 1./scale)
     # print(i_point_3d)
 
     for j in range(4): 
@@ -92,15 +70,20 @@ while flag:
     x_idx = np.random.randint(0, width)
     y_idx = np.random.randint(0, height)
     i_point_3d = points_3d[y_idx*width+x_idx]
-    if np. all((i_point_3d == 0)): 
+
+    if y_idx*width+x_idx in filtered_points:
         continue
+
     flag = False
-    i_point_3d = np.append(i_point_3d, 1.)
-    scaled_point = np.array([[i_point_3d[0]/i_point_3d[2], i_point_3d[1]/i_point_3d[2], 1., 1./i_point_3d[2]]])
-    norm = x_idx/height / np.matmul(P, scaled_point.T)[0][0]
+    scale = i_point_3d[2]
+    i_point_3d = np.array([p / scale for p in i_point_3d])
+    i_point_3d = np.append(i_point_3d, 1./scale)
+    # i_point_3d = np.append(i_point_3d, 1.)
+    # scaled_point = np.array([[i_point_3d[0]/i_point_3d[2], i_point_3d[1]/i_point_3d[2], 1., 1./i_point_3d[2]]])
+    norm = 1. / np.matmul(P, np.array(i_point_3d).T)[2]
 
-print("singular values", np.round(s, 2))
-print("projection matrix\n", np.round(P*norm, 2))
+print("singular values", np.round(s, 6))
+print("projection matrix\n", np.round(P*norm, 6))
 
-# np.savetxt('../examples/results/camera/proj_mat_ir_c0.txt', norm*P)
+np.savetxt('../examples/results/camera/test5.txt', norm*P)
 
