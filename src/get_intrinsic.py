@@ -1,17 +1,19 @@
+import sys
 import numpy as np
 import open3d as o3d
+import utils
 
-# pcd = o3d.io.read_point_cloud('../input/0406/session_1/c0.pcd')
-pcd = o3d.io.read_point_cloud('../examples/results/pcd/pcd_from_ray_pattern_img13.ply')
+pcd = utils.read_pcd('../input/photobooth/0406/session_0/c0.pcd')
+# pcd = o3d.io.read_point_cloud('../examples/results/pcd/pcd_from_ray_pattern_img13.ply')
 points_3d = pcd.points
 
 # points_3d = np.loadtxt('../examples/results/pcd/points_from_ray_pattern_img13.txt')
-# height, width = 1024, 1024
-height, width = 576, 640
+height, width = 1024, 1024
+# height, width = 576, 640
 # height, width = 1536, 2048
 
 if not height*width == len(points_3d): 
-    print("no valid pcd size")
+    sys.exit("no valid pcd size")
 
 # depth_array = np.fromfile('../input/c0_ir.bin', dtype=np.uint16).reshape(height, width)
 
@@ -22,18 +24,21 @@ if not height*width == len(points_3d):
 
 # height, width = np.shape(depth_array)
 
-n_points = 30
-n_nulls = 0
+n_points = 1000
 i_point = 0
 tiepoint_pairs_mat = np.zeros((2*n_points, 12))
-filtered_points = np.load("../examples/results/picked_points/pcd13_filtered_points.npy")
+filtered_points = np.load("../results/photobooth/picked_points/session_0/c0_filtered_points.npy")
 
 while(n_points > 0):
 
-    x_idx = np.random.randint(0, width)
-    y_idx = np.random.randint(0, height)
+    # x_idx = np.random.randint(0, width)
+    # y_idx = np.random.randint(0, height)
+    # sample points around the center to avoid distortion affects
+    x_idx = np.random.randint(192, 832)
+    y_idx = np.random.randint(192, 832)
 
-    if y_idx*width+x_idx in filtered_points:
+
+    if y_idx * width + x_idx in filtered_points:
         continue
 
     i_point_3d = points_3d[y_idx*width+x_idx]
@@ -45,7 +50,8 @@ while(n_points > 0):
     #     continue
 
     n_points -= 1
-    u, v, w = x_idx / height, y_idx / height, 1.
+    # u, v, w = x_idx / height, y_idx / height, 1.
+    u, v, w = (x_idx - 192) / 640, (y_idx - 192) / 640, 1.
     # i_point_3d = np.array([p / height for p in points_3d[y_idx*width+x_idx]])
     scale = i_point_3d[2]
     i_point_3d = np.array([p / scale for p in i_point_3d])
@@ -63,7 +69,6 @@ u, s, vh = np.linalg.svd(tiepoint_pairs_mat, full_matrices=True)
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 P = vh[-1].reshape(3, 4)
 
-print("number of null points", n_nulls)
 
 flag = True
 while flag: 
@@ -85,5 +90,5 @@ while flag:
 print("singular values", np.round(s, 6))
 print("projection matrix\n", np.round(P*norm, 6))
 
-np.savetxt('../examples/results/camera/test5.txt', norm*P)
+np.savetxt('../results/photobooth/camera/session_0/proj_mat_c0.txt', norm*P)
 

@@ -1,5 +1,7 @@
 import numpy as np
 import open3d as o3d
+import matplotlib.pyplot as plt
+import utils
 
 def display_inlier_outlier(pcd, ind):
 
@@ -7,17 +9,7 @@ def display_inlier_outlier(pcd, ind):
     outlier_pcd = pcd.select_by_index(ind, invert=True)
 
     print("Showing outliers (red) and inliers (gray): ")
-    outlier_pcd.paint_uniform_color([1, 0, 0])
-    inlier_pcd.paint_uniform_color([0.8, 0.8, 0.8])
-    o3d.visualization.draw_geometries([inlier_pcd, outlier_pcd])
-
-def interactive_display(pcd):
- 
-    vis = o3d.visualization.VisualizerWithEditing()
-    vis.create_window()
-    vis.add_geometry(pcd)
-    vis.run()  # user picks points
-
+    utils.display_two_pcds(outlier_pcd, inlier_pcd)
 
 def zero_filter(pcd): 
 
@@ -39,7 +31,7 @@ def density_filter(pcd, model):
     # In the photobooth case, statistical is faster than radius
 
     if model == 'statistical': 
-        cl, ind = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=1.)
+        cl, ind = pcd.remove_statistical_outlier(nb_neighbors=50, std_ratio=1.)
     elif model == 'radius': 
         cl, ind = pcd.remove_radius_outlier(nb_points=50, radius=0.02)
     else: 
@@ -47,12 +39,6 @@ def density_filter(pcd, model):
         print("choose a removal model between statistical and radius")
 
     return cl, ind
-
-def read_pcd(fname='../examples/results/pcd/pcd_from_ray_pattern_img13.ply'): 
-
-    pcd = o3d.io.read_point_cloud(fname)
-
-    return pcd
 
 def idx_reorder(ind, zero_idx, n_points): 
 
@@ -62,16 +48,30 @@ def idx_reorder(ind, zero_idx, n_points):
     reordered_oud = nonzero_idx[oud]
 
     return reordered_oud
-            
+ 
+def generate_mask(zero_idx):
+ 
+    height, width = 1024, 1024
+    mask = np.ones((height, width))
+
+    for idx in zero_idx: 
+        x, y = idx % width, idx // width
+        mask[y, x] = 0
+
+    return mask
+           
 if __name__ == '__main__' : 
 
-    # pcd = read_pcd('../input/0406/session_1/pcd_shrinked_c0.ply')
-    pcd = read_pcd()
+    pcd = utils.read_pcd('../input/photobooth/0406/session_0/pcd_shrinked_c4.ply')
+    # pcd = read_pcd('../examples/results/pcd/pcd_from_ray_pattern_img13.ply')
     n_points = len(pcd.points)
 
     zero_idx = zero_filter(pcd)
     points_array = np.array(pcd.points)
     
+    mask =  generate_mask(zero_idx)
+    plt.imsave('../results/photobooth/depth/c4_mask.png', mask, cmap='gray')
+
     zero_filtered_pcd = pcd.select_by_index(zero_idx, invert=True)
     cl, ind = density_filter(zero_filtered_pcd, 'statistical')
 
@@ -84,9 +84,9 @@ if __name__ == '__main__' :
     print("# of remaining points", len(ind))
 
     display_inlier_outlier(zero_filtered_pcd, ind)
-    # interactive_display(zero_filtered_pcd.select_by_index(ind))
+    # utils.interactive_display(zero_filtered_pcd.select_by_index(ind))
 
     # combine the filtered zeros and filtered less density points
     filtered_points = np.concatenate((zero_idx, outlier_idx))
 
-    np.save('../examples/results/picked_points/pcd13_filtered_points', filtered_points)
+    np.save('../results/photobooth/picked_points/session_0/c4_filtered_points', filtered_points)

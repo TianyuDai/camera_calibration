@@ -1,54 +1,61 @@
 import numpy as np
 import open3d as o3d
+import utils
 
-pcd = o3d.io.read_point_cloud('../examples/results/pcd/pcd_from_ray_pattern_img13.ply')
-points_3d = np.array(pcd.points)
+def projected_pcd(depth_image, trans, rot): 
+    depth_array = np.array(depth_image)
+    height, width = np.shape(depth_array)
 
-depth_image = o3d.io.read_image("../examples/depth/00013.png")
-depth_array = np.array(depth_image)
-height, width = np.shape(depth_array)
+    projected_points_3d = np.zeros((width*height, 3))
+    rot_inv = np.linalg.inv(rot)
+    
+    for x in range(width): 
+        for y in range(height): 
+            u = x / height
+            v = y / height
+            d = depth_array[y][x] / height
 
-proj_mat = np.loadtxt("../examples/results/camera/test2.txt")
+            if d == 0: 
+                i_point_3d = np.zeros(3)
+                continue
+            
+            u_, v_, w_ = u-trans[0]/d, v-trans[1]/d, 1.-trans[2]/d
+            i_projected_point_3d = np.matmul(rot_inv, np.array([u_, v_, w_]))
 
-trans = proj_mat.T[-1]
-rot = np.delete(proj_mat, -1, 1)
-rot_inv = np.linalg.inv(rot)
+            idx_3d = y*width+x
+            projected_points_3d[idx_3d] = np.array([p*d for p in i_projected_point_3d])
 
-projected_points_3d = np.zeros((width*height, 3))
+    return projected_points_3d
+            
+def Euclidean_dist(projected_points_3d, points_3d, filtered_idx):
 
-distance = []
-for x in range(width): 
-    for y in range(height): 
-        u = x / height
-        v = y / height
-        d = depth_array[y][x] / height
-
-        if d == 0: 
-            i_point_3d = np.zeros(3)
+    distance = []
+    for i in range(len(points_3d)): 
+        if i in filtered_idx: 
             continue
-        
-        u_, v_, w_ = u-trans[0]/d, v-trans[1]/d, 1.-trans[2]/d
-        i_projected_point_3d = np.matmul(rot_inv, np.array([u_, v_, w_]))
+        distance.append(np.linalg.norm(points_3d[i] - projected_points_3d[i]))
 
-        idx_3d = y*width+x
-        # projected_points_3d[idx_3d] = i_projected_point_3d
-        projected_points_3d[idx_3d] = np.array([p*d for p in i_projected_point_3d])
-        
-        scale = points_3d[idx_3d][2] / d
-        points_3d[idx_3d] = np.array([p/scale for p in points_3d[idx_3d]])
+    return np.mean(distance)
 
-        distance.append(np.linalg.norm(points_3d[idx_3d] - projected_points_3d[idx_3d]))
+# def display_
 
-# ave_dist = np.mean([np.linalg.norm(points_3d[i] - projected_points_3d[i]) for i in range(height*width)])
 
-print("average distance of all non-zero point is", np.mean(distance))
+if __name__ == '__main__': 
 
-filtered_idx = np.load("../examples/results/picked_points/pcd13_filtered_points.npy")
+    pcd = utils.read_pcd('../examples/results/pcd/pcd_from_ray_pattern_img13.ply')
+    points_3d = np.array(pcd.points)
 
-distance = []
-for i in range(height*width): 
-    if i in filtered_idx: 
-        continue
-    distance.append(np.linalg.norm(points_3d[i] - projected_points_3d[i]))
 
-print("average distance of inlier points is", np.mean(distance))
+    depth_image = utils.read_depth('../examples/depth/00013.png')
+    
+    trans, rot = utils.load_proj_mat("../examples/results/camera/test2.txt")
+
+    projected_points_3d = projected_pcd(depth_image, trans, rot)
+
+    filtered_idx = utils.load_filtered_idx("../examples/results/picked_points/pcd13_filtered_points.npy")
+    distance = Euclidean_dist(projected_points_3d, points_3d, filtered_idx)
+
+    print("average distance inlier points is", distance)
+
+    projected_pcd = utils.array_to_pcd(projected_points_3d)
+    utils.display_two_pcds(projected_pcd, pcd)
