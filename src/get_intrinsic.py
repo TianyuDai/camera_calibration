@@ -42,7 +42,8 @@ while(n_points > 0):
         continue
 
     i_point_3d = points_3d[y_idx*width+x_idx]
-    i_point_3d = np.array([p/height for p in i_point_3d])
+    mm_to_m = 1000.
+    i_point_3d = np.array([p/mm_to_m for p in i_point_3d])
     # print(i_point_3d) 
 
     # if np.all((i_point_3d == 0)) or not np.all((i_point_3d < 3.)):
@@ -50,8 +51,10 @@ while(n_points > 0):
     #     continue
 
     n_points -= 1
-    # u, v, w = x_idx / height, y_idx / height, 1.
-    u, v, w = (x_idx - 192) / 640, (y_idx - 192) / 640, 1.
+    u, v, w = x_idx / height, y_idx / height, 1.
+    # adjust the homogeneous coordinates after cropping and assume it between [-1, 1]
+    u, v, w = (x_idx - 180) / 320 - 1, (y_idx - 80) / 320 - 1, 1.
+    # u, v, w = (x_idx - 192) / 640, (y_idx - 192) / 640, 1.
     # i_point_3d = np.array([p / height for p in points_3d[y_idx*width+x_idx]])
     scale = i_point_3d[2]
     i_point_3d = np.array([p / scale for p in i_point_3d])

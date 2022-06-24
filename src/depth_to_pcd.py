@@ -57,7 +57,8 @@ def pcd_from_intrinsic(args):
             if d == 0: 
                 continue
             u, v = j / height, i / height
-            z = d / height
+            mm_to_m = 1000
+            z = d / mm_to_m
             x = (u - cx) * z / fx
             y = (v - cy) * z / fy
             i_point_3d = np.array([x, y, z])

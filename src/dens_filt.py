@@ -2,6 +2,8 @@ import numpy as np
 import open3d as o3d
 import matplotlib.pyplot as plt
 import utils
+from PIL import Image
+import sys
 
 def display_inlier_outlier(pcd, ind):
 
@@ -52,26 +54,25 @@ def idx_reorder(ind, zero_idx, n_points):
 def generate_mask(zero_idx):
  
     height, width = 1024, 1024
-    mask = np.ones((height, width))
+    mask = (np.ones((height, width, 3)) * 255).astype(np.uint8)
 
     for idx in zero_idx: 
         x, y = idx % width, idx // width
-        mask[y, x] = 0
+        mask[y, x] = np.array([0, 0, 0])
 
     return mask
            
 if __name__ == '__main__' : 
 
-    pcd = utils.read_pcd('../input/photobooth/0406/session_0/pcd_shrinked_c4.ply')
+    img_idx = 0
+
+    pcd = utils.read_pcd('../input/photobooth/0406/session_0/pcd_shrinked_c{}.ply'.format(img_idx))
     # pcd = read_pcd('../examples/results/pcd/pcd_from_ray_pattern_img13.ply')
     n_points = len(pcd.points)
 
     zero_idx = zero_filter(pcd)
     points_array = np.array(pcd.points)
     
-    mask =  generate_mask(zero_idx)
-    plt.imsave('../results/photobooth/depth/c4_mask.png', mask, cmap='gray')
-
     zero_filtered_pcd = pcd.select_by_index(zero_idx, invert=True)
     cl, ind = density_filter(zero_filtered_pcd, 'statistical')
 
@@ -83,10 +84,20 @@ if __name__ == '__main__' :
     print("# of all points", len(pcd.points))
     print("# of remaining points", len(ind))
 
-    display_inlier_outlier(zero_filtered_pcd, ind)
+    # display_inlier_outlier(zero_filtered_pcd, ind)
     # utils.interactive_display(zero_filtered_pcd.select_by_index(ind))
 
     # combine the filtered zeros and filtered less density points
     filtered_points = np.concatenate((zero_idx, outlier_idx))
 
-    np.save('../results/photobooth/picked_points/session_0/c4_filtered_points', filtered_points)
+    np.save('../results/photobooth/picked_points/session_0/c{}_filtered_points'.format(img_idx), filtered_points)
+
+    mask =  generate_mask(filtered_points)
+    mask_crop = mask[80:720, 180:820, :]
+    mask_resize = mask_crop[::10, ::10, :]
+    print(np.shape(mask_resize))
+    print(np.max(mask_resize))
+    im = Image.fromarray(mask_resize)
+    im.save('../results/photobooth/depth/c{}_mask.png'.format(img_idx))
+    # plt.imsave('../results/photobooth/depth/c{}_mask.png'.format(img_idx), mask_resize, cmap='gray')
+
